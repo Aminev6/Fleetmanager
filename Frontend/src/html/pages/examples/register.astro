@@ -1,0 +1,129 @@
+---
+import Head from "@components/_head.astro"
+import Scripts from "@components/_scripts.astro"
+
+const title = "AdminLTE 4 | Register Page"
+const path = "../../../dist"
+const htmlPath = "..";
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <!--begin::Head-->
+  <head>
+    <Head title={title} path={path} />
+  </head>
+  <!--end::Head-->
+  <!--begin::Body-->
+  <body class="register-page bg-body-secondary">
+    <div class="register-box">
+      <div class="register-logo">
+        <a href={htmlPath + "/index2.html"}><b>Admin</b>LTE</a>
+      </div>
+      <!-- /.register-logo -->
+      <div class="card">
+        <div class="card-body register-card-body">
+          <p class="register-box-msg">Register a new membership</p>
+
+          <form id="registerForm" autocomplete="off">
+            <div class="input-group mb-3">
+              <input id="registerName" type="text" class="form-control" placeholder="Full Name" required />
+              <div class="input-group-text">
+                <span class="bi bi-person"></span>
+              </div>
+            </div>
+            <div class="input-group mb-3">
+              <input id="registerPhone" type="text" class="form-control" placeholder="Phone" required />
+              <div class="input-group-text">
+                <span class="bi bi-telephone"></span>
+              </div>
+            </div>
+            <div class="input-group mb-3">
+              <input id="registerUsername" type="text" class="form-control" placeholder="Username" required />
+              <div class="input-group-text">
+                <span class="bi bi-person-badge"></span>
+              </div>
+            </div>
+            <div class="input-group mb-3">
+              <input id="registerPassword" type="password" class="form-control" placeholder="Password" required />
+              <div class="input-group-text">
+                <span class="bi bi-lock-fill"></span>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-8">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault" required />
+                  <label class="form-check-label" for="flexCheckDefault">
+                    I agree to the <a href="#">terms</a>
+                  </label>
+                </div>
+              </div>
+              <div class="col-4">
+                <div class="d-grid gap-2">
+                  <button type="submit" class="btn btn-primary">Register</button>
+                </div>
+              </div>
+            </div>
+          </form>
+          <div id="registerMessage" class="mt-3"></div>
+
+          <div class="social-auth-links text-center mb-3 d-grid gap-2">
+            <p>- OR -</p>
+            <a href="#" class="btn btn-primary">
+              <i class="bi bi-facebook me-2"></i> Sign in using Facebook
+            </a>
+            <a href="#" class="btn btn-danger">
+              <i class="bi bi-google me-2"></i> Sign in using Google+
+            </a>
+          </div>
+          <!-- /.social-auth-links -->
+
+          <p class="mb-0">
+            <a href="login.html" class="text-center">
+              I already have a membership
+            </a>
+          </p>
+        </div>
+        <!-- /.register-card-body -->
+      </div>
+    </div>
+    <!-- /.register-box -->
+
+    <Scripts path={path} />
+    <script>
+      document.getElementById('registerForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const name = document.getElementById('registerName').value;
+        const phone = document.getElementById('registerPhone').value;
+        const username = document.getElementById('registerUsername').value;
+        const password = document.getElementById('registerPassword').value;
+        const messageDiv = document.getElementById('registerMessage');
+        messageDiv.textContent = '';
+        try {
+          const res = await fetch('http://localhost:8080/api/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              username,
+              password,
+              profile: { name, phone }
+            })
+          });
+          const data = await res.json();
+          if (res.ok) {
+            messageDiv.textContent = 'Registration successful! You can now log in.';
+            messageDiv.className = 'alert alert-success';
+          } else {
+            messageDiv.textContent = data.message || data.error || 'Registration failed.';
+            messageDiv.className = 'alert alert-danger';
+          }
+        } catch (err) {
+          messageDiv.textContent = 'Network error.';
+          messageDiv.className = 'alert alert-danger';
+        }
+      });
+    </script>
+    <!--end::Script-->
+  </body><!--end::Body-->
+</html>

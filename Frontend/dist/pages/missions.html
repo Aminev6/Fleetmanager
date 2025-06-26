@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Missions – FleetManager</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; background: #f4f6fa; }
+    .sidebar { background: #1a2332; min-height: 100vh; }
+    .sidebar a, .sidebar h4 { color: #fff; }
+    .sidebar a.active, .sidebar a:hover { background: #22304a; color: #fff; border-radius: 6px; }
+    .logo-text { font-weight: 700; font-size: 1.5rem; letter-spacing: 1px; }
+    .card-custom {
+      border: none;
+      border-radius: 14px;
+      padding: 24px 20px 20px 20px;
+      color: #fff;
+      box-shadow: 0 2px 12px rgba(30,40,90,0.08);
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+    .bg-missions { background: linear-gradient(90deg, #0ea5e9 60%, #1e293b 100%); }
+    .form-label { font-weight: 500; }
+    .btn-primary, .btn-secondary { border-radius: 6px; font-weight: 500; }
+    .table thead th { background: #e5e9f2; color: #22304a; font-weight: 600; }
+    .table td, .table th { vertical-align: middle; }
+    .form-select, .form-control { border-radius: 6px; }
+    .content-wrapper { background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(30,40,90,0.07); }
+    @media (max-width: 991px) {
+      .sidebar { min-height: auto; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container-fluid">
+    <div class="row">
+      <!-- Sidebar -->
+      <nav class="col-md-3 col-lg-2 d-md-block sidebar py-4 px-3">
+        <div class="logo-text text-center mb-4"><i class="fa-solid fa-truck-fast me-2"></i>FleetManager</div>
+        <a href="dashboard.html" class="d-block px-3 py-2 text-decoration-none"><i class="fa-solid fa-chart-line me-2"></i>Tableau de bord</a>
+        <a href="trucks.html" class="d-block px-3 py-2 text-decoration-none"><i class="fa-solid fa-truck me-2"></i>Camions</a>
+        <a href="missions.html" class="d-block px-3 py-2 text-decoration-none active"><i class="fa-solid fa-route me-2"></i>Missions</a>
+        <a href="expenses.html" class="d-block px-3 py-2 text-decoration-none"><i class="fa-solid fa-money-bill-wave me-2"></i>Dépenses</a>
+        <a href="chauffeurs.html" class="d-block px-3 py-2 text-decoration-none"><i class="fa-solid fa-user-tie me-2"></i>Chauffeurs</a>
+        <a href="#" onclick="logout()" class="d-block px-3 py-2 text-decoration-none"><i class="fa-solid fa-right-from-bracket me-2"></i>Déconnexion</a>
+      </nav>
+
+      <!-- Main -->
+      <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 pt-4">
+        <h2>Suivi des missions</h2>
+
+        <div class="mt-4">
+          <h5>Démarrer une nouvelle mission</h5>
+          <form id="startMissionForm" class="row g-3 mb-5">
+            <div class="col-md-4">
+              <label for="departDate" class="form-label">Date de départ</label>
+              <input type="date" id="departDate" class="form-control" required />
+            </div>
+            <div class="col-md-4">
+              <label for="expectedDate" class="form-label">Date de retour prévue</label>
+              <input type="date" id="expectedDate" class="form-control" required />
+            </div>
+            <div class="col-md-6">
+              <label for="chauffeurSelect" class="form-label">Chauffeur</label>
+              <select id="chauffeurSelect" class="form-select" required></select>
+            </div>
+            <div class="col-md-6">
+              <label for="truckSelect" class="form-label">Camion</label>
+              <select id="truckSelect" class="form-select" required></select>
+            </div>
+            <div class="col-12">
+              <button type="submit" class="btn btn-success">Lancer la mission</button>
+            </div>
+          </form>
+        </div>
+
+        <hr>
+
+        <h5>Missions en cours</h5>
+        <table class="table table-bordered mt-3">
+          <thead class="table-light">
+            <tr>
+              <th>Camion</th>
+              <th>Départ</th>
+              <th>Date prévue</th>
+              <th>Chauffeur</th>
+              <th>État</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="missionsEnCours"></tbody>
+        </table>
+
+        <h5 class="mt-5">Missions terminées</h5>
+        <table class="table table-bordered">
+          <thead class="table-light">
+            <tr>
+              <th>Camion</th>
+              <th>Départ</th>
+              <th>Retour</th>
+              <th>Chauffeur</th>
+              <th>Charges</th>
+              <th>Revenus</th>
+            </tr>
+          </thead>
+          <tbody id="missionsTerminees"></tbody>
+        </table>
+
+        <div id="missionsPagination" class="mt-3 d-flex justify-content-center align-items-center gap-2"></div>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    const token = localStorage.getItem("token");
+    if (!token) window.location.href = "login.html";
+
+    function logout() {
+      localStorage.removeItem("token");
+      window.location.href = "login.html";
+    }
+
+    function fetchTrucks() {
+      fetch("http://localhost:8080/api/trucks", {
+        headers: { Authorization: token }
+      })
+      .then(res => res.json())
+      .then(data => {
+        const select = document.getElementById("truckSelect");
+        select.innerHTML = ""; // Clear previous options
+        (data.trucks || []).filter(truck => truck.etat === 'disponible').forEach(truck => {
+          const opt = document.createElement("option");
+          opt.value = truck._id;
+          opt.textContent = truck.immatriculation + (truck.marque ? ` (${truck.marque})` : "");
+          select.appendChild(opt);
+        });
+      });
+    }
+
+    function fetchChauffeurs() {
+      fetch("http://localhost:8080/api/chauffeurs", {
+        headers: { Authorization: token }
+      })
+      .then(res => res.json())
+      .then(data => {
+        const select = document.getElementById("chauffeurSelect");
+        select.innerHTML = "";
+        (data.chauffeurs || []).filter(ch => ch.etat === 'disponible').forEach(ch => {
+          const opt = document.createElement("option");
+          opt.value = ch._id;
+          opt.textContent = ch.nom + (ch.cin ? ` (${ch.cin})` : "");
+          select.appendChild(opt);
+        });
+      });
+    }
+
+    let currentPage = 1;
+    let totalPages = 1;
+    const limit = 10;
+
+    function fetchMissions(page = 1) {
+      fetch(`http://localhost:8080/api/missions?page=${page}&limit=${limit}`, {
+        headers: { Authorization: token }
+      })
+      .then(res => res.json())
+      .then(data => {
+        const missions = data.missions;
+        currentPage = data.page;
+        totalPages = data.totalPages;
+        const enCours = document.getElementById("missionsEnCours");
+        const terminees = document.getElementById("missionsTerminees");
+        enCours.innerHTML = "";
+        terminees.innerHTML = "";
+
+        missions.forEach(m => {
+          const row = document.createElement("tr");
+          if (m.status == "en_cours") {
+            // Determine if mission is en retard
+            let etat = "En cours";
+            if (m.expectedDate && !m.returnDate) {
+              const now = new Date();
+              const expected = new Date(m.expectedDate);
+              if (now > expected) etat = "En retard";
+            }
+            row.innerHTML = `
+              <td>${m.truck?.immatriculation ?? '-'}</td>
+              <td>${m.departDate ? m.departDate.slice(0,10) : '-'}</td>
+              <td>${m.expectedDate ? m.expectedDate.slice(0,10) : '-'}</td>
+              <td>${m.chauffeur?.nom ?? '-'}</td>
+              <td>${etat}</td>
+              <td>
+                <button class="btn btn-sm btn-primary" onclick="showEndMissionForm('${m._id}')">Terminer la mission</button>
+                <form id="endMissionForm-${m._id}" class="d-none mt-2" onsubmit="endMission(event, '${m._id}', '${m.truck?._id ?? ''}')">
+                  <input type="date" name="returnDate" class="form-control mb-1" placeholder="Date de retour" required />
+                  <input type="number" name="revenue" class="form-control mb-1" placeholder="Revenu (MAD)" required />
+                  <input type="number" name="kilometrageRetour" class="form-control mb-1" placeholder="Kilométrage au retour" required />
+                  <button type="submit" class="btn btn-success btn-sm">Valider</button>
+                </form>
+              </td>
+            `;
+            enCours.appendChild(row);
+          } else {
+            row.innerHTML = `
+              <td>${m.truck?.immatriculation ?? '-'}</td>
+              <td>${m.departDate?.slice(0,10) ?? "-"}</td>
+              <td>${m.expectedDate?.slice(0,10) ?? "-"}</td>
+              <td>${m.chauffeur?.nom ?? '-'}</td>
+              <td>Terminée</td>
+              <td>Revenu: ${m.revenue ?? '-'}<br>Kilométrage retour: ${m.kilometrageRetour ?? '-'}</td>
+            `;
+            terminees.appendChild(row);
+          }
+        });
+        renderMissionPagination();
+      });
+    }
+
+    function renderMissionPagination() {
+      let pagDiv = document.getElementById("missionsPagination");
+      if (!pagDiv) {
+        pagDiv = document.createElement("div");
+        pagDiv.id = "missionsPagination";
+        pagDiv.className = "mt-3 d-flex justify-content-center align-items-center gap-2";
+        document.querySelector("main").appendChild(pagDiv);
+      }
+      pagDiv.innerHTML = `
+        <button class="btn btn-secondary btn-sm" ${currentPage === 1 ? "disabled" : ""} onclick="changeMissionPage(${currentPage - 1})">Précédent</button>
+        <span>Page ${currentPage} / ${totalPages}</span>
+        <button class="btn btn-secondary btn-sm" ${currentPage === totalPages ? "disabled" : ""} onclick="changeMissionPage(${currentPage + 1})">Suivant</button>
+      `;
+    }
+
+    window.changeMissionPage = function(page) {
+      if (page >= 1 && page <= totalPages) {
+        fetchMissions(page);
+      }
+    }
+
+    document.getElementById("startMissionForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const mission = {
+        truck: document.getElementById("truckSelect").value,
+        chauffeur: document.getElementById("chauffeurSelect").value,
+        departDate: document.getElementById("departDate").value,
+        expectedDate: document.getElementById("expectedDate").value,
+      };
+      fetch("http://localhost:8080/api/missions/start", {
+        method: "POST",
+        headers: {
+          Authorization: token,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(mission)
+      })
+      .then(() => {
+        this.reset();
+        fetchMissions();
+      });
+    });
+
+    window.showEndMissionForm = function(id) {
+      document.getElementById(`endMissionForm-${id}`).classList.toggle('d-none');
+    }
+
+    window.endMission = function(e, id, truckId) {
+      e.preventDefault();
+      const form = e.target;
+      const returnDate = form.returnDate.value;
+      const revenue = form.revenue.value;
+      const kilometrageRetour = form.kilometrageRetour.value;
+      fetch(`http://localhost:8080/api/missions/end/${id}`, {
+        method: "POST",
+        headers: {
+          Authorization: token,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ returnDate, revenue, kilometrageRetour })
+      })
+      .then(() => fetchMissions());
+    }
+
+    fetchTrucks();
+    fetchChauffeurs();
+    fetchMissions();
+  </script>
+</body>
+</html>

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Types de Dépenses – FleetManager</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; background: #f4f6fa; }
+    .sidebar { background: #1a2332; min-height: 100vh; }
+    .sidebar a, .sidebar h4 { color: #fff; }
+    .sidebar a.active, .sidebar a:hover { background: #22304a; color: #fff; border-radius: 6px; }
+    .logo-text { font-weight: 700; font-size: 1.5rem; letter-spacing: 1px; }
+    .card-custom {
+      border: none;
+      border-radius: 14px;
+      padding: 24px 20px 20px 20px;
+      color: #fff;
+      box-shadow: 0 2px 12px rgba(30,40,90,0.08);
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+    .bg-typedepenses { background: linear-gradient(90deg, #0ea5e9 60%, #1e293b 100%); }
+    .form-label { font-weight: 500; }
+    .btn-primary, .btn-secondary { border-radius: 6px; font-weight: 500; }
+    .table thead th { background: #e5e9f2; color: #22304a; font-weight: 600; }
+    .table td, .table th { vertical-align: middle; }
+    .form-select, .form-control { border-radius: 6px; }
+    .content-wrapper { background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(30,40,90,0.07); }
+    @media (max-width: 991px) {
+      .sidebar { min-height: auto; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container-fluid">
+    <div class="row">
+      <!-- Sidebar -->
+      <nav class="col-md-3 col-lg-2 d-md-block sidebar py-4 px-3">
+        <div class="logo-text text-center mb-4"><i class="fa-solid fa-truck-fast me-2"></i>FleetManager</div>
+        <a href="dashboard.html" class="d-block px-3 py-2 text-decoration-none"><i class="fa-solid fa-chart-line me-2"></i>Tableau de bord</a>
+        <a href="trucks.html" class="d-block px-3 py-2 text-decoration-none"><i class="fa-solid fa-truck me-2"></i>Camions</a>
+        <a href="missions.html" class="d-block px-3 py-2 text-decoration-none"><i class="fa-solid fa-route me-2"></i>Missions</a>
+        <a href="expenses.html" class="d-block px-3 py-2 text-decoration-none"><i class="fa-solid fa-money-bill-wave me-2"></i>Dépenses</a>
+        <a href="typeDepenses.html" class="d-block px-3 py-2 text-decoration-none active"><i class="fa-solid fa-list me-2"></i>Types de Dépenses</a>
+        <a href="chauffeurs.html" class="d-block px-3 py-2 text-decoration-none"><i class="fa-solid fa-user-tie me-2"></i>Chauffeurs</a>
+        <a href="#" onclick="logout()" class="d-block px-3 py-2 text-decoration-none"><i class="fa-solid fa-right-from-bracket me-2"></i>Déconnexion</a>
+      </nav>
+      <!-- Main content -->
+      <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 pt-4">
+        <h1>Types de Dépenses</h1>
+        <div class="card-custom bg-typedepenses">
+          <i class="fas fa-money-bill-wave fa-2x text-white"></i>
+          <div>
+            <h5 class="card-title text-white">Types de Dépenses</h5>
+            <p class="card-text text-white">Gérer les types de dépenses</p>
+          </div>
+        </div>
+        <div class="content-wrapper">
+          <h2>Liste des Types de Dépenses</h2>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Nom</th>
+                <th>Description</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Réparation</td>
+                <td>Dépenses liées à la réparation d'un véhicule</td>
+                <td>
+                  <a href="#" class="btn btn-primary">Modifier</a>
+                  <a href="#" class="btn btn-danger">Supprimer</a>
+                </td>
+              </tr>
+              <tr>
+                <td>Essence</td>
+                <td>Dépenses liées à l'achat d'essence</td>
+                <td>
+                  <a href="#" class="btn btn-primary">Modifier</a>
+                  <a href="#" class="btn btn-danger">Supprimer</a>
+                </td>
+              </tr>
+              <tr>
+                <td>Entretien</td>
+                <td>Dépenses liées à l'entretien d'un véhicule</td>
+                <td>
+                  <a href="#" class="btn btn-primary">Modifier</a>
+                  <a href="#" class="btn btn-danger">Supprimer</a>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <a href="#" class="btn btn-primary">Ajouter un Type de Dépense</a>
+        </div>
+      </main>
+    </div>
+  </div>
+</body>
+</html> 

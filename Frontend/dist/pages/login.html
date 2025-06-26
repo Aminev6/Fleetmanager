@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Connexion – FleetManager</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- ✅ AdminLTE CSS : fonctionne avec dist/css -->
+  <link rel="stylesheet" href="../css/adminlte.min.css">
+
+  <!-- ❌ FontAwesome : supprimé pour l’instant (absent de ton projet) -->
+
+</head>
+<body class="login-page">
+  <div class="login-box">
+    <div class="card card-outline card-primary">
+      <div class="card-header text-center">
+        <a href="#" class="h1"><b>Fleet</b>Manager</a>
+      </div>
+      <div class="card-body">
+        <p class="login-box-msg">Connecte-toi pour continuer</p>
+
+        <form id="loginForm">
+          <div class="input-group mb-3">
+            <input type="text" id="username" class="form-control" placeholder="Nom d'utilisateur" required>
+            <div class="input-group-append">
+              <div class="input-group-text">@</div>
+            </div>
+          </div>
+          <div class="input-group mb-3">
+            <input type="password" id="password" class="form-control" placeholder="Mot de passe" required>
+            <div class="input-group-append">
+              <div class="input-group-text">🔒</div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-8"></div>
+            <div class="col-4">
+              <button type="submit" class="btn btn-primary btn-block">Connexion</button>
+            </div>
+          </div>
+        </form>
+
+        <p class="mt-3 text-danger" id="errorMsg" style="display:none;"></p>
+        <p class="mt-2">Pas encore de compte ? <a href="register.html">Créer un compte</a></p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById("loginForm");
+    const errorMsg = document.getElementById("errorMsg");
+
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+
+      fetch("http://localhost:8080/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+      })
+      .then(res => {
+        if (!res.ok) throw new Error("Échec de connexion");
+        return res.json();
+      })
+      .then(data => {
+        localStorage.setItem("token", data.token);
+        window.location.href = "dashboard.html";
+      })
+      .catch(() => {
+        errorMsg.textContent = "Identifiants invalides";
+        errorMsg.style.display = "block";
+      });
+    });
+  </script>
+</body>
+</html>
