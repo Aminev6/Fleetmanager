@@ -46,6 +46,8 @@
         <a href="missions.html" class="d-block px-3 py-2 text-decoration-none active"><i class="fa-solid fa-route me-2"></i>Missions</a>
         <a href="expenses.html" class="d-block px-3 py-2 text-decoration-none"><i class="fa-solid fa-money-bill-wave me-2"></i>Dépenses</a>
         <a href="chauffeurs.html" class="d-block px-3 py-2 text-decoration-none"><i class="fa-solid fa-user-tie me-2"></i>Chauffeurs</a>
+        <a href="reports.html" class="d-block px-3 py-2 text-decoration-none"><i class="fa-solid fa-file-pdf me-2"></i>Rapports</a>
+        <a href="alerts.html" class="d-block px-3 py-2 text-decoration-none"><i class="fa-solid fa-bell me-2"></i>Alertes</a>
         <a href="#" onclick="logout()" class="d-block px-3 py-2 text-decoration-none"><i class="fa-solid fa-right-from-bracket me-2"></i>Déconnexion</a>
       </nav>
 
@@ -126,7 +128,7 @@
 
     function fetchTrucks() {
       fetch("http://localhost:8080/api/trucks", {
-        headers: { Authorization: token }
+        headers: { Authorization: 'Bearer ' + token }
       })
       .then(res => res.json())
       .then(data => {
@@ -143,7 +145,7 @@
 
     function fetchChauffeurs() {
       fetch("http://localhost:8080/api/chauffeurs", {
-        headers: { Authorization: token }
+        headers: { Authorization: 'Bearer ' + token }
       })
       .then(res => res.json())
       .then(data => {
@@ -164,7 +166,7 @@
 
     function fetchMissions(page = 1) {
       fetch(`http://localhost:8080/api/missions?page=${page}&limit=${limit}`, {
-        headers: { Authorization: token }
+        headers: { Authorization: 'Bearer ' + token }
       })
       .then(res => res.json())
       .then(data => {
@@ -251,8 +253,8 @@
       fetch("http://localhost:8080/api/missions/start", {
         method: "POST",
         headers: {
-          Authorization: token,
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
+          Authorization: 'Bearer ' + token
         },
         body: JSON.stringify(mission)
       })
@@ -272,13 +274,14 @@
       const returnDate = form.returnDate.value;
       const revenue = form.revenue.value;
       const kilometrageRetour = form.kilometrageRetour.value;
+      const endData = { returnDate, revenue, kilometrageRetour };
       fetch(`http://localhost:8080/api/missions/end/${id}`, {
         method: "POST",
         headers: {
-          Authorization: token,
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
+          Authorization: 'Bearer ' + token
         },
-        body: JSON.stringify({ returnDate, revenue, kilometrageRetour })
+        body: JSON.stringify(endData)
       })
       .then(() => fetchMissions());
     }

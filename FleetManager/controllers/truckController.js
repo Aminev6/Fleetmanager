@@ -1,6 +1,10 @@
 console.log('TRUCK CONTROLLER LOADED');
 const Truck = require("../models/Truck");
 
+// Alert thresholds
+const VIDANGE_KM_THRESHOLD = 500; // km
+const DATE_THRESHOLD_DAYS = 30; // days
+
 exports.addTruck = async (req, res) => {
   try {
     console.log('addTruck req.body:', req.body);
@@ -70,6 +74,59 @@ exports.getTrucksWithEcheances = async (req, res) => {
   try {
     const trucks = await Truck.find({ owner: req.user.userId }).select("assurance vidange visiteTechnique");
     res.json(trucks);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.getAlerts = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const now = new Date();
+    const dateThreshold = new Date(now.getTime() + DATE_THRESHOLD_DAYS * 24 * 60 * 60 * 1000);
+
+    const trucks = await Truck.find({ owner: userId });
+    const alerts = trucks.map(truck => {
+      const alert = { immatriculation: truck.immatriculation, marque: truck.marque, _id: truck._id };
+      // Vidange (oil change)
+      if (truck.vidange && typeof truck.vidange.kilometrageRestant === 'number') {
+        if (truck.vidange.kilometrageRestant <= 0) {
+          alert.vidange = 'overdue';
+        } else if (truck.vidange.kilometrageRestant <= VIDANGE_KM_THRESHOLD) {
+          alert.vidange = 'soon';
+        }
+      }
+      // Assurance (insurance)
+      if (truck.assurance && truck.assurance.echeance) {
+        const assuranceDate = new Date(truck.assurance.echeance);
+        if (assuranceDate < now) {
+          alert.assurance = 'overdue';
+        } else if (assuranceDate <= dateThreshold) {
+          alert.assurance = 'soon';
+        }
+      }
+      // Visite Technique (technical inspection)
+      if (truck.visiteTechnique && truck.visiteTechnique.echeance) {
+        const vtDate = new Date(truck.visiteTechnique.echeance);
+        if (vtDate < now) {
+          alert.visiteTechnique = 'overdue';
+        } else if (vtDate <= dateThreshold) {
+          alert.visiteTechnique = 'soon';
+        }
+      }
+      // Carte Grise (registration)
+      if (truck.echeanceCarteGrise) {
+        const cgDate = new Date(truck.echeanceCarteGrise);
+        if (cgDate < now) {
+          alert.carteGrise = 'overdue';
+        } else if (cgDate <= dateThreshold) {
+          alert.carteGrise = 'soon';
+        }
+      }
+      return alert;
+    }).filter(alert => alert.vidange || alert.assurance || alert.visiteTechnique || alert.carteGrise);
+
+    res.json({ alerts });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

@@ -34,6 +34,30 @@
     @media (max-width: 991px) {
       .sidebar { min-height: auto; }
     }
+    .alert-summary-card {
+      background: linear-gradient(90deg, #ffbaba 0%, #ffe082 100%) !important;
+      border-radius: 18px;
+      border: none;
+      min-height: 160px;
+      box-shadow: 0 4px 24px rgba(220,38,38,0.10), 0 1.5px 6px rgba(30,40,90,0.07);
+      transition: box-shadow 0.2s;
+    }
+    .alert-summary-card:hover {
+      box-shadow: 0 8px 32px rgba(220,38,38,0.18), 0 2px 8px rgba(30,40,90,0.10);
+    }
+    .alert-link-btn {
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(220,38,38,0.10);
+      background: #dc2626;
+      color: #fff;
+      border: none;
+    }
+    .alert-link-btn:hover {
+      background: #b91c1c;
+      color: #fff;
+    }
   </style>
 </head>
 <body>
@@ -48,11 +72,30 @@
         <a href="missions.html" class="d-block px-3 py-2 text-decoration-none"><i class="fa-solid fa-route me-2"></i>Missions</a>
         <a href="expenses.html" class="d-block px-3 py-2 text-decoration-none"><i class="fa-solid fa-money-bill-wave me-2"></i>Dépenses</a>
         <a href="chauffeurs.html" class="d-block px-3 py-2 text-decoration-none"><i class="fa-solid fa-user-tie me-2"></i>Chauffeurs</a>
+        <a href="reports.html" class="d-block px-3 py-2 text-decoration-none"><i class="fa-solid fa-file-pdf me-2"></i>Rapports</a>
+        <a href="alerts.html" class="d-block px-3 py-2 text-decoration-none"><i class="fa-solid fa-bell me-2"></i>Alertes</a>
         <a href="#" onclick="logout()" class="d-block px-3 py-2 text-decoration-none"><i class="fa-solid fa-right-from-bracket me-2"></i>Déconnexion</a>
       </nav>
       <!-- Main -->
       <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 pt-4">
         <h2 class="mb-4">Tableau de bord</h2>
+        <!-- Alert Summary Card (moved to top) -->
+        <div class="row mb-4">
+          <div class="col-12 col-lg-8 mx-auto">
+            <div class="alert-summary-card p-4 mb-4 d-flex align-items-center shadow-lg">
+              <div class="me-4 d-flex flex-column align-items-center justify-content-center" style="min-width:80px;">
+                <i class="fa-solid fa-bell fa-3x mb-2 text-danger"></i>
+                <span class="badge rounded-pill bg-danger fs-4 mb-1" id="urgentCount" style="min-width:2.8em;">0</span>
+                <span class="badge rounded-pill bg-warning text-dark fs-5" id="warningCount" style="min-width:2.8em;">0</span>
+              </div>
+              <div class="flex-grow-1">
+                <h4 class="mb-1 fw-bold text-dark">Alertes échéances</h4>
+                <p class="mb-2 text-dark fs-6">Vous avez <span class="fw-bold text-danger" id="urgentCountText">0</span> urgente(s) et <span class="fw-bold text-warning" id="warningCountText">0</span> à surveiller pour vos camions.</p>
+                <a href="alerts.html" class="btn btn-lg btn-danger shadow-sm px-4 py-2 alert-link-btn">Voir les alertes <i class="fa-solid fa-arrow-right ms-1"></i></a>
+              </div>
+            </div>
+          </div>
+        </div>
         <div class="row g-4 mt-3">
           <div class="col-md-4">
             <div class="card card-custom bg-camions">
@@ -129,7 +172,7 @@
     const token = localStorage.getItem("token");
     if (!token) logout();
     fetch("http://localhost:8080/api/dashboard", {
-      headers: { "Authorization": token }
+      headers: { "Authorization": "Bearer " + token }
     })
     .then(res => res.json())
     .then(data => {
@@ -151,6 +194,64 @@
       document.getElementById("dashboard-error").classList.remove("d-none");
       logout();
     });
+    function loadAlertSummary() {
+      const token = localStorage.getItem('token');
+      const settings = JSON.parse(localStorage.getItem('alertSettings') || '{"vidange":30,"assurance":30,"carteGrise":30,"visite":30}');
+      fetch('http://localhost:8080/api/trucks', {
+        headers: { Authorization: 'Bearer ' + token }
+      })
+      .then(res => res.json())
+      .then(data => {
+        const trucks = data.trucks || [];
+        let urgentCount = 0, warningCount = 0;
+        const today = new Date();
+        trucks.forEach(truck => {
+          // Vidange
+          if (truck.vidange && typeof truck.vidange.kilometrageRestant === 'number') {
+            if (truck.vidange.kilometrageRestant <= 0) {
+              urgentCount++;
+            } else if (truck.vidange.kilometrageRestant <= 500) {
+              warningCount++;
+            }
+          }
+          // Assurance
+          let assuranceDate = truck.assurance && truck.assurance.echeance ? new Date(truck.assurance.echeance) : null;
+          if (assuranceDate) {
+            const diff = Math.ceil((assuranceDate - today) / (1000*60*60*24));
+            if (diff <= 0) {
+              urgentCount++;
+            } else if (diff <= settings.assurance) {
+              warningCount++;
+            }
+          }
+          // Carte grise
+          let carteDate = truck.echeanceCarteGrise ? new Date(truck.echeanceCarteGrise) : null;
+          if (carteDate) {
+            const diff = Math.ceil((carteDate - today) / (1000*60*60*24));
+            if (diff <= 0) {
+              urgentCount++;
+            } else if (diff <= settings.carteGrise) {
+              warningCount++;
+            }
+          }
+          // Visite technique
+          let visiteDate = truck.visiteTechnique && truck.visiteTechnique.echeance ? new Date(truck.visiteTechnique.echeance) : null;
+          if (visiteDate) {
+            const diff = Math.ceil((visiteDate - today) / (1000*60*60*24));
+            if (diff <= 0) {
+              urgentCount++;
+            } else if (diff <= settings.visite) {
+              warningCount++;
+            }
+          }
+        });
+        document.getElementById('urgentCount').textContent = urgentCount;
+        document.getElementById('warningCount').textContent = warningCount;
+        document.getElementById('urgentCountText').textContent = urgentCount;
+        document.getElementById('warningCountText').textContent = warningCount;
+      });
+    }
+    loadAlertSummary();
   </script>
 </body>
 </html>

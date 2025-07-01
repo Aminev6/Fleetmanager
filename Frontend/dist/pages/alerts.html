@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Alertes Échéances – FleetManager</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; background: #f4f6fa; }
+    .sidebar { background: #1a2332; min-height: 100vh; }
+    .sidebar a, .sidebar h4 { color: #fff; }
+    .sidebar a.active, .sidebar a:hover { background: #22304a; color: #fff; border-radius: 6px; }
+    .logo-text { font-weight: 700; font-size: 1.5rem; letter-spacing: 1px; }
+    .content-wrapper { background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(30,40,90,0.07); }
+    .alert-table th, .alert-table td { vertical-align: middle; }
+    .alert-urgent { background: #ffe5e5 !important; }
+    .alert-warning { background: #fffbe5 !important; }
+    .alert-ok { background: #e5ffe5 !important; }
+    .settings-box { background: #fff; border-radius: 8px; box-shadow: 0 1px 6px rgba(30,40,90,0.07); padding: 1rem 1.5rem; margin-bottom: 2rem; }
+    .pointer { cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div class="container-fluid">
+    <div class="row">
+      <!-- Sidebar -->
+      <nav class="col-md-3 col-lg-2 d-md-block sidebar py-4 px-3">
+        <div class="logo-text text-center mb-4"><i class="fa-solid fa-truck-fast me-2"></i>FleetManager</div>
+        <a href="dashboard.html" class="d-block px-3 py-2 text-decoration-none"><i class="fa-solid fa-chart-line me-2"></i>Tableau de bord</a>
+        <a href="trucks.html" class="d-block px-3 py-2 text-decoration-none"><i class="fa-solid fa-truck me-2"></i>Camions</a>
+        <a href="missions.html" class="d-block px-3 py-2 text-decoration-none"><i class="fa-solid fa-route me-2"></i>Missions</a>
+        <a href="expenses.html" class="d-block px-3 py-2 text-decoration-none"><i class="fa-solid fa-money-bill-wave me-2"></i>Dépenses</a>
+        <a href="chauffeurs.html" class="d-block px-3 py-2 text-decoration-none"><i class="fa-solid fa-user-tie me-2"></i>Chauffeurs</a>
+        <a href="reports.html" class="d-block px-3 py-2 text-decoration-none"><i class="fa-solid fa-file-pdf me-2"></i>Rapports</a>
+        <a href="alerts.html" class="d-block px-3 py-2 text-decoration-none active"><i class="fa-solid fa-bell me-2"></i>Alertes</a>
+        <a href="#" onclick="logout()" class="d-block px-3 py-2 text-decoration-none"><i class="fa-solid fa-right-from-bracket me-2"></i>Déconnexion</a>
+      </nav>
+      <!-- Main -->
+      <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 pt-4">
+        <h2>Alertes Échéances</h2>
+        <div class="settings-box mb-4">
+          <h5><i class="fa-solid fa-gear me-2"></i>Paramètres de notification</h5>
+          <form id="settingsForm" class="row g-3 align-items-end">
+            <div class="col-auto">
+              <label for="notifVidange" class="form-label">Alerte vidange (jours avant)</label>
+              <input type="number" min="1" max="365" class="form-control" id="notifVidange" value="30">
+            </div>
+            <div class="col-auto">
+              <label for="notifAssurance" class="form-label">Alerte assurance (jours avant)</label>
+              <input type="number" min="1" max="365" class="form-control" id="notifAssurance" value="30">
+            </div>
+            <div class="col-auto">
+              <label for="notifCarteGrise" class="form-label">Alerte carte grise (jours avant)</label>
+              <input type="number" min="1" max="365" class="form-control" id="notifCarteGrise" value="30">
+            </div>
+            <div class="col-auto">
+              <label for="notifVisite" class="form-label">Alerte visite technique (jours avant)</label>
+              <input type="number" min="1" max="365" class="form-control" id="notifVisite" value="30">
+            </div>
+            <div class="col-auto">
+              <button type="submit" class="btn btn-primary">Enregistrer</button>
+            </div>
+          </form>
+        </div>
+        <div id="alertSummary" class="mb-3"></div>
+        <div class="table-responsive">
+          <table class="table table-bordered alert-table align-middle">
+            <thead class="table-light">
+              <tr>
+                <th>Camion</th>
+                <th>Vidange (km restant)</th>
+                <th>Assurance (échéance)</th>
+                <th>Carte grise (échéance)</th>
+                <th>Visite technique (échéance)</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="alertsBody"></tbody>
+          </table>
+        </div>
+      </main>
+    </div>
+  </div>
+  <!-- Modal for updating échéance -->
+  <div class="modal fade" id="updateModal" tabindex="-1" aria-labelledby="updateModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="updateModalLabel">Mettre à jour l'échéance</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="updateForm">
+            <input type="hidden" id="updateTruckId">
+            <input type="hidden" id="updateField">
+            <div class="mb-3" id="updateInputContainer"></div>
+            <button type="submit" class="btn btn-success">Enregistrer</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    function logout() {
+      localStorage.removeItem("token");
+      window.location.href = "login.html";
+    }
+    const token = localStorage.getItem('token');
+    // Load notification settings from localStorage
+    const defaultSettings = { vidange: 30, assurance: 30, carteGrise: 30, visite: 30 };
+    function getSettings() {
+      return JSON.parse(localStorage.getItem('alertSettings') || JSON.stringify(defaultSettings));
+    }
+    function saveSettings(settings) {
+      localStorage.setItem('alertSettings', JSON.stringify(settings));
+    }
+    document.getElementById('settingsForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const settings = {
+        vidange: parseInt(document.getElementById('notifVidange').value, 10),
+        assurance: parseInt(document.getElementById('notifAssurance').value, 10),
+        carteGrise: parseInt(document.getElementById('notifCarteGrise').value, 10),
+        visite: parseInt(document.getElementById('notifVisite').value, 10)
+      };
+      saveSettings(settings);
+      loadAlerts();
+    });
+    // Modal helpers
+    let updateModal = new bootstrap.Modal(document.getElementById('updateModal'));
+    function showUpdateModal(truckId, field, currentValue) {
+      document.getElementById('updateTruckId').value = truckId;
+      document.getElementById('updateField').value = field;
+      let html = '';
+      if (field === 'vidange') {
+        html = `<label for="updateValue" class="form-label">Kilométrage restant</label><input type="number" class="form-control" id="updateValue" value="${currentValue}" min="0">`;
+      } else {
+        html = `<label for="updateValue" class="form-label">Nouvelle échéance</label><input type="date" class="form-control" id="updateValue" value="${currentValue ? currentValue.slice(0,10) : ''}">`;
+      }
+      document.getElementById('updateInputContainer').innerHTML = html;
+      updateModal.show();
+    }
+    document.getElementById('updateForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const truckId = document.getElementById('updateTruckId').value;
+      const field = document.getElementById('updateField').value;
+      const value = document.getElementById('updateValue').value;
+      let body = {};
+      if (field === 'vidange') {
+        body = { 'vidange.kilometrageRestant': parseInt(value, 10) };
+      } else if (field === 'assurance') {
+        body = { 'assurance.echeance': value };
+      } else if (field === 'carteGrise') {
+        body = { 'echeanceCarteGrise': value };
+      } else if (field === 'visite') {
+        body = { 'visiteTechnique.echeance': value };
+      }
+      fetch(`http://localhost:8080/api/trucks/${truckId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+        body: JSON.stringify(body)
+      })
+      .then(res => {
+        if (!res.ok) throw new Error('Erreur lors de la mise à jour');
+        updateModal.hide();
+        loadAlerts();
+      })
+      .catch(err => alert(err.message));
+    });
+    // Load and display alerts
+    function loadAlerts() {
+      const settings = getSettings();
+      fetch('http://localhost:8080/api/trucks', {
+        headers: { Authorization: 'Bearer ' + token }
+      })
+      .then(res => res.json())
+      .then(data => {
+        const trucks = data.trucks || [];
+        let urgentCount = 0, warningCount = 0;
+        const today = new Date();
+        const alertsBody = document.getElementById('alertsBody');
+        alertsBody.innerHTML = '';
+        trucks.forEach(truck => {
+          // Vidange
+          let vidangeClass = 'alert-ok', vidangeIcon = '';
+          if (truck.vidange && typeof truck.vidange.kilometrageRestant === 'number') {
+            if (truck.vidange.kilometrageRestant <= 0) {
+              vidangeClass = 'alert-urgent'; vidangeIcon = '<i class="fa-solid fa-triangle-exclamation text-danger"></i>';
+              urgentCount++;
+            } else if (truck.vidange.kilometrageRestant <= 500) {
+              vidangeClass = 'alert-warning'; vidangeIcon = '<i class="fa-solid fa-circle-exclamation text-warning"></i>';
+              warningCount++;
+            }
+          }
+          // Assurance
+          let assuranceClass = 'alert-ok', assuranceIcon = '';
+          let assuranceDate = truck.assurance && truck.assurance.echeance ? new Date(truck.assurance.echeance) : null;
+          if (assuranceDate) {
+            const diff = Math.ceil((assuranceDate - today) / (1000*60*60*24));
+            if (diff <= 0) {
+              assuranceClass = 'alert-urgent'; assuranceIcon = '<i class="fa-solid fa-triangle-exclamation text-danger"></i>';
+              urgentCount++;
+            } else if (diff <= settings.assurance) {
+              assuranceClass = 'alert-warning'; assuranceIcon = '<i class="fa-solid fa-circle-exclamation text-warning"></i>';
+              warningCount++;
+            }
+          }
+          // Carte grise
+          let carteClass = 'alert-ok', carteIcon = '';
+          let carteDate = truck.echeanceCarteGrise ? new Date(truck.echeanceCarteGrise) : null;
+          if (carteDate) {
+            const diff = Math.ceil((carteDate - today) / (1000*60*60*24));
+            if (diff <= 0) {
+              carteClass = 'alert-urgent'; carteIcon = '<i class="fa-solid fa-triangle-exclamation text-danger"></i>';
+              urgentCount++;
+            } else if (diff <= settings.carteGrise) {
+              carteClass = 'alert-warning'; carteIcon = '<i class="fa-solid fa-circle-exclamation text-warning"></i>';
+              warningCount++;
+            }
+          }
+          // Visite technique
+          let visiteClass = 'alert-ok', visiteIcon = '';
+          let visiteDate = truck.visiteTechnique && truck.visiteTechnique.echeance ? new Date(truck.visiteTechnique.echeance) : null;
+          if (visiteDate) {
+            const diff = Math.ceil((visiteDate - today) / (1000*60*60*24));
+            if (diff <= 0) {
+              visiteClass = 'alert-urgent'; visiteIcon = '<i class="fa-solid fa-triangle-exclamation text-danger"></i>';
+              urgentCount++;
+            } else if (diff <= settings.visite) {
+              visiteClass = 'alert-warning'; visiteIcon = '<i class="fa-solid fa-circle-exclamation text-warning"></i>';
+              warningCount++;
+            }
+          }
+          alertsBody.innerHTML += `
+            <tr>
+              <td><b>${truck.immatriculation}</b> <span class="text-muted">${truck.marque || ''}</span></td>
+              <td class="${vidangeClass}">${vidangeIcon} ${truck.vidange && typeof truck.vidange.kilometrageRestant === 'number' ? truck.vidange.kilometrageRestant + ' km' : '-' } <span class="pointer text-primary ms-2" onclick="showUpdateModal('${truck._id}','vidange','${truck.vidange ? truck.vidange.kilometrageRestant : ''}')"><i class="fa-solid fa-pen"></i></span></td>
+              <td class="${assuranceClass}">${assuranceIcon} ${assuranceDate ? assuranceDate.toLocaleDateString('fr-FR') : '-' } <span class="pointer text-primary ms-2" onclick="showUpdateModal('${truck._id}','assurance','${truck.assurance && truck.assurance.echeance ? truck.assurance.echeance : ''}')"><i class="fa-solid fa-pen"></i></span></td>
+              <td class="${carteClass}">${carteIcon} ${carteDate ? carteDate.toLocaleDateString('fr-FR') : '-' } <span class="pointer text-primary ms-2" onclick="showUpdateModal('${truck._id}','carteGrise','${truck.echeanceCarteGrise || ''}')"><i class="fa-solid fa-pen"></i></span></td>
+              <td class="${visiteClass}">${visiteIcon} ${visiteDate ? visiteDate.toLocaleDateString('fr-FR') : '-' } <span class="pointer text-primary ms-2" onclick="showUpdateModal('${truck._id}','visite','${truck.visiteTechnique && truck.visiteTechnique.echeance ? truck.visiteTechnique.echeance : ''}')"><i class="fa-solid fa-pen"></i></span></td>
+              <td><span class="badge bg-danger-subtle text-danger"><i class="fa-solid fa-bell"></i> ${urgentCount > 0 ? 'Urgent' : warningCount > 0 ? 'À surveiller' : 'OK'}</span></td>
+            </tr>
+          `;
+        });
+        document.getElementById('alertSummary').innerHTML = `<b>${urgentCount}</b> échéance(s) urgente(s), <b>${warningCount}</b> à surveiller.`;
+      });
+    }
+    loadAlerts();
+  </script>
+</body>
+</html> 

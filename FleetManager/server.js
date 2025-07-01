@@ -31,6 +31,8 @@ const chauffeurRoutes = require('./routes/chauffeur');
 app.use('/api/chauffeurs', chauffeurRoutes);
 const typeDepenseRoutes = require('./routes/typeDepense');
 app.use('/api/type-depenses', typeDepenseRoutes);
+const reportRoutes = require('./routes/report');
+app.use('/api/report', reportRoutes);
 
 // Default route
 app.get('/', (req, res) => {

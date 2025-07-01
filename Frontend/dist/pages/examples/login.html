@@ -56,33 +56,32 @@
       <div class="card">
         <div class="card-body login-card-body">
           <p class="login-box-msg">Sign in to start your session</p>
-          <form action="../index3.html" method="post">
+          <form id="loginForm" autocomplete="off">
             <div class="input-group mb-3">
-              <input type="email" class="form-control" placeholder="Email" />
-              <div class="input-group-text"><span class="bi bi-envelope"></span></div>
+              <input
+                id="loginUsername"
+                type="text"
+                class="form-control"
+                placeholder="Username"
+                required
+              />
+              <div class="input-group-text"><span class="bi bi-person"></span></div>
             </div>
             <div class="input-group mb-3">
-              <input type="password" class="form-control" placeholder="Password" />
+              <input
+                id="loginPassword"
+                type="password"
+                class="form-control"
+                placeholder="Password"
+                required
+              />
               <div class="input-group-text"><span class="bi bi-lock-fill"></span></div>
             </div>
-            <!--begin::Row-->
-            <div class="row">
-              <div class="col-8">
-                <div class="form-check">
-                  <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault" />
-                  <label class="form-check-label" for="flexCheckDefault"> Remember Me </label>
-                </div>
-              </div>
-              <!-- /.col -->
-              <div class="col-4">
-                <div class="d-grid gap-2">
-                  <button type="submit" class="btn btn-primary">Sign In</button>
-                </div>
-              </div>
-              <!-- /.col -->
+            <div class="d-grid gap-2">
+              <button type="submit" class="btn btn-primary">Sign In</button>
             </div>
-            <!--end::Row-->
           </form>
+          <div id="loginMessage" class="mt-3"></div>
           <div class="social-auth-links text-center mb-3 d-grid gap-2">
             <p>- OR -</p>
             <a href="#" class="btn btn-primary">
@@ -144,6 +143,29 @@
       });
     </script>
     <!--end::OverlayScrollbars Configure-->
+    <script type="module">
+      document.getElementById('loginForm').addEventListener('submit', async function (a) {
+        a.preventDefault();
+        const s = document.getElementById('loginUsername').value,
+          o = document.getElementById('loginPassword').value,
+          e = document.getElementById('loginMessage');
+        e.textContent = '';
+        try {
+          const t = await fetch('http://localhost:8080/api/login', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ username: s, password: o }),
+            }),
+            n = await t.json();
+          t.ok
+            ? ((e.textContent = 'Login successful!'), (e.className = 'alert alert-success'))
+            : ((e.textContent = n.message || n.error || 'Login failed.'),
+              (e.className = 'alert alert-danger'));
+        } catch {
+          (e.textContent = 'Network error.'), (e.className = 'alert alert-danger');
+        }
+      });
+    </script>
     <!--end::Script-->
   </body>
   <!--end::Body-->

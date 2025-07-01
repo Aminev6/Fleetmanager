@@ -54,6 +54,8 @@
         <a href="missions.html" class="d-block px-3 py-2 text-decoration-none"><i class="fa-solid fa-route me-2"></i>Missions</a>
         <a href="expenses.html" class="d-block px-3 py-2 text-decoration-none active"><i class="fa-solid fa-money-bill-wave me-2"></i>Dépenses</a>
         <a href="chauffeurs.html" class="d-block px-3 py-2 text-decoration-none"><i class="fa-solid fa-user-tie me-2"></i>Chauffeurs</a>
+        <a href="reports.html" class="d-block px-3 py-2 text-decoration-none"><i class="fa-solid fa-file-pdf me-2"></i>Rapports</a>
+        <a href="alerts.html" class="d-block px-3 py-2 text-decoration-none"><i class="fa-solid fa-bell me-2"></i>Alertes</a>
         <a href="#" onclick="logout()" class="d-block px-3 py-2 text-decoration-none"><i class="fa-solid fa-right-from-bracket me-2"></i>Déconnexion</a>
       </nav>
       <!-- Main -->
@@ -167,7 +169,7 @@
       if (typeDepenseFilter) url += `&typeDepense=${typeDepenseFilter}`;
       if (camionFilter) url += `&camion=${camionFilter}`;
       fetch(url, {
-        headers: { Authorization: token }
+        headers: { Authorization: 'Bearer ' + token }
       })
       .then(res => res.json())
       .then(data => {
@@ -225,7 +227,7 @@
       const category = document.getElementById('typeDepenseCategory').value;
       fetch('http://localhost:8080/api/type-depenses', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: token },
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
         body: JSON.stringify({ name, category })
       })
       .then(() => {
@@ -236,7 +238,7 @@
     });
     function fetchTypeDepenses() {
       fetch('http://localhost:8080/api/type-depenses', {
-        headers: { Authorization: token }
+        headers: { Authorization: 'Bearer ' + token }
       })
       .then(res => res.json())
       .then(types => {
@@ -264,7 +266,7 @@
     }
     function fetchCamions() {
       fetch('http://localhost:8080/api/trucks', {
-        headers: { Authorization: token }
+        headers: { Authorization: 'Bearer ' + token }
       })
       .then(res => res.json())
       .then(data => {
@@ -295,7 +297,7 @@
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: token
+          Authorization: 'Bearer ' + token
         },
         body: JSON.stringify({ amount, description, date, typeDepense, modePaiement, beneficiaire, camion })
       });
@@ -305,7 +307,7 @@
 
     function fetchTypeDepensesForFilter() {
       fetch('http://localhost:8080/api/type-depenses', {
-        headers: { Authorization: token }
+        headers: { Authorization: 'Bearer ' + token }
       })
       .then(res => res.json())
       .then(types => {
@@ -321,7 +323,7 @@
     }
     function fetchCamionsForFilter() {
       fetch('http://localhost:8080/api/trucks', {
-        headers: { Authorization: token }
+        headers: { Authorization: 'Bearer ' + token }
       })
       .then(res => res.json())
       .then(data => {
