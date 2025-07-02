@@ -8,7 +8,7 @@
   <!-- ✅ AdminLTE CSS : fonctionne avec dist/css -->
   <link rel="stylesheet" href="../css/adminlte.min.css">
 
-  <!-- ❌ FontAwesome : supprimé pour l’instant (absent de ton projet) -->
+  <!-- ❌ FontAwesome : supprimé pour l'instant (absent de ton projet) -->
 
 </head>
 <body class="login-page">
@@ -57,7 +57,7 @@
       const username = document.getElementById("username").value;
       const password = document.getElementById("password").value;
 
-      fetch("http://localhost:8080/api/auth/login", {
+      fetch("http://192.168.100.131:8080/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password })

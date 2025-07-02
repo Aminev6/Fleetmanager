@@ -40,14 +40,52 @@
     @media (max-width: 991px) {
       .sidebar { min-height: auto; }
     }
+    @media (max-width: 767.98px) {
+      #sidebar {
+        position: fixed;
+        top: 0;
+        left: -260px;
+        width: 260px;
+        height: 100vh;
+        background: #1a2332;
+        box-shadow: none;
+        z-index: 1040;
+        transition: left 0.3s, box-shadow 0.3s;
+      }
+      #sidebar .logo-text { font-size: 1.2rem; }
+      #sidebarClose { display: block; }
+    }
+    @media (min-width: 768px) {
+      #sidebarClose, #sidebarToggle, #sidebarOverlay { display: none !important; }
+    }
+    /* Custom horizontal scrollbar for table-responsive */
+    .table-responsive {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .table-responsive::-webkit-scrollbar {
+      height: 8px;
+      background: #f4f6fa;
+    }
+    .table-responsive::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
   </style>
   <script src="../plugins/jquery/jquery.min.js"></script>
 </head>
-<body class="hold-transition sidebar-mini">
+<body>
   <div class="container-fluid">
+    <!-- Topbar with hamburger for mobile -->
+    <div class="d-md-none d-flex align-items-center py-2 px-3 bg-white shadow-sm" style="position:sticky;top:0;z-index:1040;">
+      <button id="sidebarToggle" class="btn btn-link p-0 me-3" style="font-size:2rem;"><i class="fa-solid fa-bars"></i></button>
+      <span class="fw-bold fs-5">FleetManager</span>
+    </div>
     <div class="row">
       <!-- Sidebar -->
-      <nav class="col-md-3 col-lg-2 d-md-block sidebar py-4 px-3">
+      <div id="sidebarOverlay" class="d-md-none" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(30,40,90,0.25);z-index:1039;"></div>
+      <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block sidebar py-4 px-3" style="transition:left 0.3s,box-shadow 0.3s;left:0;z-index:1040;">
+        <button id="sidebarClose" class="btn btn-link d-md-none position-absolute end-0 top-0 mt-2 me-2" style="font-size:2rem;"><i class="fa-solid fa-xmark"></i></button>
         <div class="logo-text text-center mb-4"><i class="fa-solid fa-truck-fast me-2"></i>FleetManager</div>
         <a href="dashboard.html" class="d-block px-3 py-2 text-decoration-none"><i class="fa-solid fa-chart-line me-2"></i>Tableau de bord</a>
         <a href="trucks.html" class="d-block px-3 py-2 text-decoration-none"><i class="fa-solid fa-truck me-2"></i>Camions</a>
@@ -132,21 +170,23 @@
         </div>
 
         <h4 class="mt-4"><i class="fa-solid fa-list-ul me-2"></i>Historique des dépenses</h4>
-        <table class="table table-bordered" id="expenseTable">
-          <thead>
-            <tr>
-              <th><i class="fa-regular fa-calendar-days me-1"></i>Date</th>
-              <th><i class="fa-solid fa-tags me-1"></i>Type</th>
-              <th><i class="fa-solid fa-coins me-1"></i>Montant</th>
-              <th><i class="fa-solid fa-credit-card me-1"></i>Paiement</th>
-              <th><i class="fa-solid fa-user me-1"></i>Bénéficiaire</th>
-              <th><i class="fa-solid fa-truck me-1"></i>Camion</th>
-            </tr>
-          </thead>
-          <tbody>
-            <!-- Dépenses chargées dynamiquement -->
-          </tbody>
-        </table>
+        <div class="table-responsive">
+          <table class="table table-bordered" id="expenseTable">
+            <thead>
+              <tr>
+                <th><i class="fa-regular fa-calendar-days me-1"></i>Date</th>
+                <th><i class="fa-solid fa-tags me-1"></i>Type</th>
+                <th><i class="fa-solid fa-coins me-1"></i>Montant</th>
+                <th><i class="fa-solid fa-credit-card me-1"></i>Paiement</th>
+                <th><i class="fa-solid fa-user me-1"></i>Bénéficiaire</th>
+                <th><i class="fa-solid fa-truck me-1"></i>Camion</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Dépenses chargées dynamiquement -->
+            </tbody>
+          </table>
+        </div>
       </main>
     </div>
   </div>
@@ -165,7 +205,7 @@
     function fetchExpenses(page = 1) {
       const typeDepenseFilter = document.getElementById('filterTypeDepense').value;
       const camionFilter = document.getElementById('filterCamion').value;
-      let url = `http://localhost:8080/api/expenses?page=${page}&limit=${limit}`;
+      let url = `http://192.168.100.131:8080/api/expenses?page=${page}&limit=${limit}`;
       if (typeDepenseFilter) url += `&typeDepense=${typeDepenseFilter}`;
       if (camionFilter) url += `&camion=${camionFilter}`;
       fetch(url, {
@@ -225,7 +265,7 @@
       e.preventDefault();
       const name = document.getElementById('typeDepenseName').value;
       const category = document.getElementById('typeDepenseCategory').value;
-      fetch('http://localhost:8080/api/type-depenses', {
+      fetch('http://192.168.100.131:8080/api/type-depenses', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
         body: JSON.stringify({ name, category })
@@ -237,7 +277,7 @@
       });
     });
     function fetchTypeDepenses() {
-      fetch('http://localhost:8080/api/type-depenses', {
+      fetch('http://192.168.100.131:8080/api/type-depenses', {
         headers: { Authorization: 'Bearer ' + token }
       })
       .then(res => res.json())
@@ -265,7 +305,7 @@
       document.getElementById('camionSelectDiv').style.display = (category === 'camion') ? '' : 'none';
     }
     function fetchCamions() {
-      fetch('http://localhost:8080/api/trucks', {
+      fetch('http://192.168.100.131:8080/api/trucks', {
         headers: { Authorization: 'Bearer ' + token }
       })
       .then(res => res.json())
@@ -293,7 +333,7 @@
       const modePaiement = document.getElementById("modePaiement").value;
       const beneficiaire = document.getElementById("beneficiaire").value;
       const camion = document.getElementById("camionSelectDiv").style.display !== 'none' ? document.getElementById("camionSelect").value : undefined;
-      await fetch("http://localhost:8080/api/expenses", {
+      await fetch("http://192.168.100.131:8080/api/expenses", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -306,7 +346,7 @@
     });
 
     function fetchTypeDepensesForFilter() {
-      fetch('http://localhost:8080/api/type-depenses', {
+      fetch('http://192.168.100.131:8080/api/type-depenses', {
         headers: { Authorization: 'Bearer ' + token }
       })
       .then(res => res.json())
@@ -322,7 +362,7 @@
       });
     }
     function fetchCamionsForFilter() {
-      fetch('http://localhost:8080/api/trucks', {
+      fetch('http://192.168.100.131:8080/api/trucks', {
         headers: { Authorization: 'Bearer ' + token }
       })
       .then(res => res.json())
@@ -343,6 +383,37 @@
     fetchCamionsForFilter();
 
     fetchExpenses();
+
+    // Sidebar mobile toggle logic
+    const sidebar = document.getElementById('sidebar');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const sidebarClose = document.getElementById('sidebarClose');
+    function openSidebar() {
+      sidebar.style.left = '0';
+      sidebar.style.boxShadow = '0 0 24px rgba(30,40,90,0.18)';
+      sidebarOverlay.style.display = 'block';
+    }
+    function closeSidebar() {
+      sidebar.style.left = '-260px';
+      sidebar.style.boxShadow = 'none';
+      sidebarOverlay.style.display = 'none';
+    }
+    if (window.innerWidth < 768) {
+      sidebar.style.left = '-260px';
+    }
+    sidebarToggle && sidebarToggle.addEventListener('click', openSidebar);
+    sidebarClose && sidebarClose.addEventListener('click', closeSidebar);
+    sidebarOverlay && sidebarOverlay.addEventListener('click', closeSidebar);
+    window.addEventListener('resize', function() {
+      if (window.innerWidth >= 768) {
+        sidebar.style.left = '0';
+        sidebarOverlay.style.display = 'none';
+      } else {
+        sidebar.style.left = '-260px';
+        sidebarOverlay.style.display = 'none';
+      }
+    });
   </script>
 </body>
 </html>

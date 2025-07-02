@@ -33,13 +33,64 @@
     @media (max-width: 991px) {
       .sidebar { min-height: auto; }
     }
+    @media (max-width: 767.98px) {
+      #sidebar {
+        position: fixed;
+        top: 0;
+        left: -260px;
+        width: 260px;
+        height: 100vh;
+        background: #1a2332;
+        box-shadow: none;
+        z-index: 1040;
+        transition: left 0.3s, box-shadow 0.3s;
+      }
+      #sidebar .logo-text { font-size: 1.2rem; }
+      #sidebarClose { display: block; }
+    }
+    @media (min-width: 768px) {
+      #sidebarClose, #sidebarToggle, #sidebarOverlay { display: none !important; }
+    }
+    /* Custom horizontal scrollbar for table-responsive */
+    .table-responsive {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .table-responsive::-webkit-scrollbar {
+      height: 8px;
+      background: #f4f6fa;
+    }
+    .table-responsive::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    /* Prevent table cells from wrapping for key columns */
+    .table td.one-line, .table th.one-line {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 160px;
+    }
+    .table td.one-line-chauffeur, .table th.one-line-chauffeur {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 260px;
+    }
   </style>
 </head>
 <body>
   <div class="container-fluid">
+    <!-- Topbar with hamburger for mobile -->
+    <div class="d-md-none d-flex align-items-center py-2 px-3 bg-white shadow-sm" style="position:sticky;top:0;z-index:1040;">
+      <button id="sidebarToggle" class="btn btn-link p-0 me-3" style="font-size:2rem;"><i class="fa-solid fa-bars"></i></button>
+      <span class="fw-bold fs-5">FleetManager</span>
+    </div>
     <div class="row">
       <!-- Sidebar -->
-      <nav class="col-md-3 col-lg-2 d-md-block sidebar py-4 px-3">
+      <div id="sidebarOverlay" class="d-md-none" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(30,40,90,0.25);z-index:1039;"></div>
+      <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block sidebar py-4 px-3" style="transition:left 0.3s,box-shadow 0.3s;left:0;z-index:1040;">
+        <button id="sidebarClose" class="btn btn-link d-md-none position-absolute end-0 top-0 mt-2 me-2" style="font-size:2rem;"><i class="fa-solid fa-xmark"></i></button>
         <div class="logo-text text-center mb-4"><i class="fa-solid fa-truck-fast me-2"></i>FleetManager</div>
         <a href="dashboard.html" class="d-block px-3 py-2 text-decoration-none"><i class="fa-solid fa-chart-line me-2"></i>Tableau de bord</a>
         <a href="trucks.html" class="d-block px-3 py-2 text-decoration-none"><i class="fa-solid fa-truck me-2"></i>Camions</a>
@@ -83,34 +134,38 @@
         <hr>
 
         <h5>Missions en cours</h5>
-        <table class="table table-bordered mt-3">
-          <thead class="table-light">
-            <tr>
-              <th>Camion</th>
-              <th>Départ</th>
-              <th>Date prévue</th>
-              <th>Chauffeur</th>
-              <th>État</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody id="missionsEnCours"></tbody>
-        </table>
+        <div class="table-responsive">
+          <table class="table table-bordered mt-3">
+            <thead class="table-light">
+              <tr>
+                <th class="one-line">Camion</th>
+                <th class="one-line">Départ</th>
+                <th class="one-line">Date prévue</th>
+                <th class="one-line-chauffeur">Chauffeur</th>
+                <th>État</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="missionsEnCours"></tbody>
+          </table>
+        </div>
 
         <h5 class="mt-5">Missions terminées</h5>
-        <table class="table table-bordered">
-          <thead class="table-light">
-            <tr>
-              <th>Camion</th>
-              <th>Départ</th>
-              <th>Retour</th>
-              <th>Chauffeur</th>
-              <th>Charges</th>
-              <th>Revenus</th>
-            </tr>
-          </thead>
-          <tbody id="missionsTerminees"></tbody>
-        </table>
+        <div class="table-responsive">
+          <table class="table table-bordered">
+            <thead class="table-light">
+              <tr>
+                <th class="one-line">Camion</th>
+                <th class="one-line">Départ</th>
+                <th class="one-line">Retour</th>
+                <th class="one-line-chauffeur">Chauffeur</th>
+                <th>Charges</th>
+                <th>Revenus</th>
+              </tr>
+            </thead>
+            <tbody id="missionsTerminees"></tbody>
+          </table>
+        </div>
 
         <div id="missionsPagination" class="mt-3 d-flex justify-content-center align-items-center gap-2"></div>
       </main>
@@ -127,7 +182,7 @@
     }
 
     function fetchTrucks() {
-      fetch("http://localhost:8080/api/trucks", {
+      fetch("http://192.168.100.131:8080/api/trucks", {
         headers: { Authorization: 'Bearer ' + token }
       })
       .then(res => res.json())
@@ -144,7 +199,7 @@
     }
 
     function fetchChauffeurs() {
-      fetch("http://localhost:8080/api/chauffeurs", {
+      fetch("http://192.168.100.131:8080/api/chauffeurs", {
         headers: { Authorization: 'Bearer ' + token }
       })
       .then(res => res.json())
@@ -165,7 +220,7 @@
     const limit = 10;
 
     function fetchMissions(page = 1) {
-      fetch(`http://localhost:8080/api/missions?page=${page}&limit=${limit}`, {
+      fetch(`http://192.168.100.131:8080/api/missions?page=${page}&limit=${limit}`, {
         headers: { Authorization: 'Bearer ' + token }
       })
       .then(res => res.json())
@@ -189,10 +244,10 @@
               if (now > expected) etat = "En retard";
             }
             row.innerHTML = `
-              <td>${m.truck?.immatriculation ?? '-'}</td>
-              <td>${m.departDate ? m.departDate.slice(0,10) : '-'}</td>
-              <td>${m.expectedDate ? m.expectedDate.slice(0,10) : '-'}</td>
-              <td>${m.chauffeur?.nom ?? '-'}</td>
+              <td class="one-line">${m.truck?.immatriculation ?? '-'}</td>
+              <td class="one-line">${m.departDate ? m.departDate.slice(0,10) : '-'}</td>
+              <td class="one-line">${m.expectedDate ? m.expectedDate.slice(0,10) : '-'}</td>
+              <td class="one-line-chauffeur">${m.chauffeur?.nom ?? '-'}</td>
               <td>${etat}</td>
               <td>
                 <button class="btn btn-sm btn-primary" onclick="showEndMissionForm('${m._id}')">Terminer la mission</button>
@@ -207,10 +262,10 @@
             enCours.appendChild(row);
           } else {
             row.innerHTML = `
-              <td>${m.truck?.immatriculation ?? '-'}</td>
-              <td>${m.departDate?.slice(0,10) ?? "-"}</td>
-              <td>${m.expectedDate?.slice(0,10) ?? "-"}</td>
-              <td>${m.chauffeur?.nom ?? '-'}</td>
+              <td class="one-line">${m.truck?.immatriculation ?? '-'}</td>
+              <td class="one-line">${m.departDate?.slice(0,10) ?? "-"}</td>
+              <td class="one-line">${m.expectedDate?.slice(0,10) ?? "-"}</td>
+              <td class="one-line-chauffeur">${m.chauffeur?.nom ?? '-'}</td>
               <td>Terminée</td>
               <td>Revenu: ${m.revenue ?? '-'}<br>Kilométrage retour: ${m.kilometrageRetour ?? '-'}</td>
             `;
@@ -250,7 +305,7 @@
         departDate: document.getElementById("departDate").value,
         expectedDate: document.getElementById("expectedDate").value,
       };
-      fetch("http://localhost:8080/api/missions/start", {
+      fetch("http://192.168.100.131:8080/api/missions/start", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -275,7 +330,7 @@
       const revenue = form.revenue.value;
       const kilometrageRetour = form.kilometrageRetour.value;
       const endData = { returnDate, revenue, kilometrageRetour };
-      fetch(`http://localhost:8080/api/missions/end/${id}`, {
+      fetch(`http://192.168.100.131:8080/api/missions/end/${id}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -285,6 +340,37 @@
       })
       .then(() => fetchMissions());
     }
+
+    // Sidebar mobile toggle logic
+    const sidebar = document.getElementById('sidebar');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const sidebarClose = document.getElementById('sidebarClose');
+    function openSidebar() {
+      sidebar.style.left = '0';
+      sidebar.style.boxShadow = '0 0 24px rgba(30,40,90,0.18)';
+      sidebarOverlay.style.display = 'block';
+    }
+    function closeSidebar() {
+      sidebar.style.left = '-260px';
+      sidebar.style.boxShadow = 'none';
+      sidebarOverlay.style.display = 'none';
+    }
+    if (window.innerWidth < 768) {
+      sidebar.style.left = '-260px';
+    }
+    sidebarToggle && sidebarToggle.addEventListener('click', openSidebar);
+    sidebarClose && sidebarClose.addEventListener('click', closeSidebar);
+    sidebarOverlay && sidebarOverlay.addEventListener('click', closeSidebar);
+    window.addEventListener('resize', function() {
+      if (window.innerWidth >= 768) {
+        sidebar.style.left = '0';
+        sidebarOverlay.style.display = 'none';
+      } else {
+        sidebar.style.left = '-260px';
+        sidebarOverlay.style.display = 'none';
+      }
+    });
 
     fetchTrucks();
     fetchChauffeurs();
